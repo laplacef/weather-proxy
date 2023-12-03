@@ -1,0 +1,27 @@
+{
+    "name": "weather-app",
+    "version": "1.0.0",
+    "description": "A simple weather application using Node.js and OpenWeatherMap API.",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/your-username/weather-app.git"
+    },
+    "keywords": [
+        "weather",
+        "nodejs",
+        "openweathermap",
+        "api"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.17.1",
+        "dotenv": "^8.2.0",
+        "node-fetch": "^2.6.1"
+    }
+}
