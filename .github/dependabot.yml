@@ -1,0 +1,30 @@
+version: 2
+
+# Security updates run advisory-driven with no config; this adds routine
+# version-update PRs. Weekly, grouped to keep review load low.
+#
+# No auto-merge here on purpose. The gated pattern used in the site repos waits
+# on a required status check before merging, and this repo has no CI, so an
+# auto-merged bump would land with nothing verifying it. Every PR stays manual
+# until a workflow exists to gate on.
+updates:
+  # App deps (package.json + package-lock.json). Minor and patch bumps are
+  # grouped so a weekly refresh is one review; majors open individually.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      npm-minor-patch:
+        update-types:
+          - minor
+          - patch
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 3
+    open-pull-requests-limit: 5
