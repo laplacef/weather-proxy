@@ -1,15 +1,14 @@
 {
-  "name": "weather-app",
+  "name": "weather-proxy",
   "version": "1.0.0",
   "description": "A simple weather application using Node.js and OpenWeatherMap API.",
-  "main": "server.js",
+  "main": "src/js/server.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/js/server.js"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/laplacef/weather_app.git"
+    "url": "https://github.com/laplacef/weather-proxy.git"
   },
   "keywords": [
     "weather",
@@ -17,7 +16,7 @@
     "openweathermap",
     "api"
   ],
-  "author": "laplacef",
+  "author": "Francisco Laplace (https://laplacef.me)",
   "license": "MIT",
   "dependencies": {
     "dotenv": "^8.6.0",
