@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node --check src/js/server.js
+
+      # There are no unit tests, so the gate is a boot smoke test: starting the
+      # server resolves every runtime dependency and exercises the static
+      # middleware. That covers the dependency breakage most likely to land
+      # here — node-fetch 3 is ESM-only and would fail the require, and an
+      # Express major would break express.static.
+      #
+      # The weather route is deliberately not exercised: it needs an API key
+      # and a live call to OpenWeatherMap.
+      - name: Boot server and serve a static file
+        env:
+          PORT: 3000
+        run: |
+          node src/js/server.js &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:3000/index.html -o /dev/null; then
+              echo "server booted and served index.html"
+              exit 0
+            fi
+            sleep 0.5
+          done
+          echo "server did not respond within 10s" >&2
+          exit 1
