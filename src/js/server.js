@@ -56,6 +56,11 @@ setInterval(() => {
     }
 }, RATE_WINDOW_MS).unref();
 
+// Letters, marks, spaces, and the punctuation that appears in place names,
+// including the "City,CC" form OpenWeatherMap accepts. Anything else is
+// rejected before a request is built, ahead of the encoding below.
+const CITY_PATTERN = /^[\p{L}\p{M}\s.,'-]{1,80}$/u;
+
 app.get('/weather/:city', rateLimit, async (req, res) => {
     const apiKey = process.env.OPENWEATHERMAP_API_KEY;
     if (!apiKey) {
@@ -63,9 +68,14 @@ app.get('/weather/:city', rateLimit, async (req, res) => {
         return res.status(500).json({ error: 'Server is not configured.' });
     }
 
+    const rawCity = req.params.city;
+    if (!CITY_PATTERN.test(rawCity)) {
+        return res.status(400).json({ error: 'Invalid city name.' });
+    }
+
     // encodeURIComponent keeps a city name containing & or = from injecting
     // additional query parameters into the upstream request.
-    const city = encodeURIComponent(req.params.city);
+    const city = encodeURIComponent(rawCity);
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
 
     try {
