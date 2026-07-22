@@ -1,33 +1,46 @@
-// Importing required modules
+const path = require('path');
 const express = require('express');
 const fetch = require('node-fetch');
 require('dotenv').config();
 
-// Creating an instance of Express app
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Serving static files from the 'src' directory
-app.use(express.static('src'));
+// Resolved from __dirname so the server works regardless of the working
+// directory it was started from.
+app.use(express.static(path.join(__dirname, '..')));
 
-// Handling GET requests for weather data
 app.get('/weather/:city', async (req, res) => {
-    const city = req.params.city;
     const apiKey = process.env.OPENWEATHERMAP_API_KEY;
+    if (!apiKey) {
+        console.error('OPENWEATHERMAP_API_KEY is not set');
+        return res.status(500).json({ error: 'Server is not configured.' });
+    }
+
+    // encodeURIComponent keeps a city name containing & or = from injecting
+    // additional query parameters into the upstream request.
+    const city = encodeURIComponent(req.params.city);
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
 
     try {
-        // Sending a GET request to the OpenWeatherMap API
         const response = await fetch(url);
-        const data = await response.json();
-        res.json(data);
+
+        if (!response.ok) {
+            console.error(`OpenWeatherMap returned ${response.status}`);
+            return response.status === 404
+                ? res.status(404).json({ error: 'City not found.' })
+                : res.status(502).json({ error: 'Weather data is unavailable.' });
+        }
+
+        res.json(await response.json());
     } catch (error) {
-        // Handling errors and sending an error response
-        res.status(500).json({ message: error.message });
+        // Logged server-side only. The client gets a fixed string so upstream
+        // error text and network details stay internal.
+        console.error('Weather lookup failed:', error);
+        res.status(502).json({ error: 'Weather data is unavailable.' });
     }
 });
 
-// Starting the server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
