@@ -1,7 +1,7 @@
 {
   "name": "weather-proxy",
   "version": "1.0.0",
-  "description": "A simple weather application using Node.js and OpenWeatherMap API.",
+  "description": "Weather lookup app that keeps the OpenWeatherMap API key server-side behind an Express proxy.",
   "main": "src/js/server.js",
   "scripts": {
     "start": "node src/js/server.js"
@@ -14,6 +14,8 @@
     "weather",
     "nodejs",
     "openweathermap",
+    "express",
+    "api-proxy",
     "api"
   ],
   "author": "Francisco Laplace (https://laplacef.me)",
