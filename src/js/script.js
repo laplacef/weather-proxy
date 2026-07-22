@@ -18,14 +18,14 @@ async function getWeatherData(city) {
 
 function displayWeather(weatherData) {
     const rows = [
-        ['Temperature', `${weatherData.main.temp}°C`],
-        ['Description', weatherData.weather[0].description],
-        ['Humidity', `${weatherData.main.humidity}%`],
-        ['Wind Speed', `${weatherData.wind.speed} m/s`],
+        ['Temperature', `${weatherData.temperature}°C`],
+        ['Description', weatherData.description],
+        ['Humidity', `${weatherData.humidity}%`],
+        ['Wind Speed', `${weatherData.windSpeed} m/s`],
     ];
 
     const heading = document.createElement('h2');
-    heading.textContent = weatherData.name;
+    heading.textContent = weatherData.city;
 
     const fragment = document.createDocumentFragment();
     fragment.append(heading);

@@ -94,7 +94,17 @@ app.get('/weather/:city', rateLimit, async (req, res) => {
                 : res.status(502).json({ error: 'Weather data is unavailable.' });
         }
 
-        res.json(await response.json());
+        // Return only the fields the client renders. The upstream payload
+        // carries coordinates, station ids, and internal codes the browser
+        // has no use for and that need not leave the server.
+        const payload = await response.json();
+        res.json({
+            city: payload.name,
+            temperature: payload.main.temp,
+            description: payload.weather[0].description,
+            humidity: payload.main.humidity,
+            windSpeed: payload.wind.speed,
+        });
     } catch (error) {
         // Logged server-side only. The client gets a fixed string so upstream
         // error text and network details stay internal.
