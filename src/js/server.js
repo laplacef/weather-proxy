@@ -24,7 +24,39 @@ app.use((req, res, next) => {
 // directory it was started from.
 app.use(express.static(path.join(__dirname, '..')));
 
-app.get('/weather/:city', async (req, res) => {
+// Fixed-window rate limit per client IP. The weather route is an open
+// relay to a shared upstream quota, so cap how fast one caller can spend
+// it. This is a floor, not a replacement for an edge limiter in front of
+// a real deployment.
+const RATE_LIMIT = 60;
+const RATE_WINDOW_MS = 60 * 1000;
+const hits = new Map();
+
+function rateLimit(req, res, next) {
+    const now = Date.now();
+    let entry = hits.get(req.ip);
+    if (!entry || now >= entry.resetAt) {
+        entry = { count: 0, resetAt: now + RATE_WINDOW_MS };
+        hits.set(req.ip, entry);
+    }
+    entry.count += 1;
+    if (entry.count > RATE_LIMIT) {
+        res.set('Retry-After', String(Math.ceil((entry.resetAt - now) / 1000)));
+        return res.status(429).json({ error: 'Too many requests.' });
+    }
+    next();
+}
+
+// Drop expired entries so the map cannot grow without bound. unref() keeps
+// the timer from holding the process open on its own.
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, entry] of hits) {
+        if (now >= entry.resetAt) hits.delete(ip);
+    }
+}, RATE_WINDOW_MS).unref();
+
+app.get('/weather/:city', rateLimit, async (req, res) => {
     const apiKey = process.env.OPENWEATHERMAP_API_KEY;
     if (!apiKey) {
         console.error('OPENWEATHERMAP_API_KEY is not set');
