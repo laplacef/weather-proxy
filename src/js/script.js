@@ -1,43 +1,51 @@
-// Attach a click event listener to the search button
 document.getElementById('search-button').addEventListener('click', function () {
     const cityName = document.getElementById('search-input').value;
     if (cityName) {
-        // Call the getWeatherData function with the cityName as parameter
         getWeatherData(cityName)
-            .then(displayWeather) // Display the weather data on success
-            .catch(handleError); // Handle any errors that occur
+            .then(displayWeather)
+            .catch(handleError);
     }
 });
 
-// Function to fetch weather data for a given city
 async function getWeatherData(city) {
-    const response = await fetch(`/weather/${city}`);
+    const response = await fetch(`/weather/${encodeURIComponent(city)}`);
     if (!response.ok) {
-        throw new Error(`An error occurred: ${response.status}`);
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || 'Weather data is unavailable.');
     }
     return await response.json();
 }
 
-// Function to display the weather information on the page
 function displayWeather(weatherData) {
-    const weatherInfoDiv = document.getElementById('weather-info');
-    const temperature = weatherData.main.temp;
-    const description = weatherData.weather[0].description;
-    const humidity = weatherData.main.humidity;
-    const windSpeed = weatherData.wind.speed;
+    const rows = [
+        ['Temperature', `${weatherData.main.temp}°C`],
+        ['Description', weatherData.weather[0].description],
+        ['Humidity', `${weatherData.main.humidity}%`],
+        ['Wind Speed', `${weatherData.wind.speed} m/s`],
+    ];
 
-    // Update the weatherInfoDiv with the weather data
-    weatherInfoDiv.innerHTML = `
-        <h2>${weatherData.name}</h2>
-        <p>Temperature: ${temperature}°C</p>
-        <p>Description: ${description}</p>
-        <p>Humidity: ${humidity}%</p>
-        <p>Wind Speed: ${windSpeed} m/s</p>
-    `;
+    const heading = document.createElement('h2');
+    heading.textContent = weatherData.name;
+
+    const fragment = document.createDocumentFragment();
+    fragment.append(heading);
+
+    for (const [label, value] of rows) {
+        const p = document.createElement('p');
+        p.textContent = `${label}: ${value}`;
+        fragment.append(p);
+    }
+
+    render(fragment);
 }
 
-// Function to handle errors and display error message
 function handleError(error) {
+    const p = document.createElement('p');
+    p.textContent = `Error: ${error.message}`;
+    render(p);
+}
+
+function render(node) {
     const weatherInfoDiv = document.getElementById('weather-info');
-    weatherInfoDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+    weatherInfoDiv.replaceChildren(node);
 }
