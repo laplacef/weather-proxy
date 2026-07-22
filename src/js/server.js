@@ -56,6 +56,8 @@ setInterval(() => {
     }
 }, RATE_WINDOW_MS).unref();
 
+const UPSTREAM_TIMEOUT_MS = 5000;
+
 // Letters, marks, spaces, and the punctuation that appears in place names,
 // including the "City,CC" form OpenWeatherMap accepts. Anything else is
 // rejected before a request is built, ahead of the encoding below.
@@ -78,8 +80,12 @@ app.get('/weather/:city', rateLimit, async (req, res) => {
     const city = encodeURIComponent(rawCity);
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
 
+    // Abort a slow upstream so a hung request cannot pin a connection open.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+
     try {
-        const response = await fetch(url);
+        const response = await fetch(url, { signal: controller.signal });
 
         if (!response.ok) {
             console.error(`OpenWeatherMap returned ${response.status}`);
@@ -93,7 +99,10 @@ app.get('/weather/:city', rateLimit, async (req, res) => {
         // Logged server-side only. The client gets a fixed string so upstream
         // error text and network details stay internal.
         console.error('Weather lookup failed:', error);
-        res.status(502).json({ error: 'Weather data is unavailable.' });
+        const status = error.name === 'AbortError' ? 504 : 502;
+        res.status(status).json({ error: 'Weather data is unavailable.' });
+    } finally {
+        clearTimeout(timeout);
     }
 });
 
