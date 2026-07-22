@@ -47,16 +47,25 @@ function rateLimit(req, res, next) {
     next();
 }
 
-// Drop expired entries so the map cannot grow without bound. unref() keeps
+// Drop expired entries so the maps cannot grow without bound. unref() keeps
 // the timer from holding the process open on its own.
 setInterval(() => {
     const now = Date.now();
     for (const [ip, entry] of hits) {
         if (now >= entry.resetAt) hits.delete(ip);
     }
+    for (const [key, entry] of cache) {
+        if (now >= entry.expiresAt) cache.delete(key);
+    }
 }, RATE_WINDOW_MS).unref();
 
 const UPSTREAM_TIMEOUT_MS = 5000;
+
+// Short-lived per-city cache. Weather changes slowly relative to how often
+// a page might be refreshed, so a few minutes of reuse spares the upstream
+// quota and speeds repeat lookups. Keyed by the normalized city name.
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const cache = new Map();
 
 // Letters, marks, spaces, and the punctuation that appears in place names,
 // including the "City,CC" form OpenWeatherMap accepts. Anything else is
@@ -73,6 +82,12 @@ app.get('/weather/:city', rateLimit, async (req, res) => {
     const rawCity = req.params.city;
     if (!CITY_PATTERN.test(rawCity)) {
         return res.status(400).json({ error: 'Invalid city name.' });
+    }
+
+    const cacheKey = rawCity.trim().toLowerCase();
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+        return res.json(cached.data);
     }
 
     // encodeURIComponent keeps a city name containing & or = from injecting
@@ -98,13 +113,16 @@ app.get('/weather/:city', rateLimit, async (req, res) => {
         // carries coordinates, station ids, and internal codes the browser
         // has no use for and that need not leave the server.
         const payload = await response.json();
-        res.json({
+        const data = {
             city: payload.name,
             temperature: payload.main.temp,
             description: payload.weather[0].description,
             humidity: payload.main.humidity,
             windSpeed: payload.wind.speed,
-        });
+        };
+
+        cache.set(cacheKey, { data, expiresAt: Date.now() + CACHE_TTL_MS });
+        res.json(data);
     } catch (error) {
         // Logged server-side only. The client gets a fixed string so upstream
         // error text and network details stay internal.
