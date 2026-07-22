@@ -1,84 +1,43 @@
-# Weather App
+# Weather Proxy
 
-## Introduction
+Look up the current weather for a city. The browser sends the city name to a small Express
+server, which calls the [OpenWeatherMap](https://openweathermap.org/) API and returns the
+result.
 
-This Weather App is a simple, user-friendly application that allows users to search for current weather conditions in different cities. Utilizing OpenWeatherMap's API, it provides real-time weather information like temperature, humidity, and wind speed. The app runs on a Node.js server to securely handle API requests, keeping sensitive API keys hidden from the client-side.
+The server exists to hold the API key. A key embedded in client-side JavaScript is readable
+by anyone who opens developer tools, so this app keeps it in the server environment. The
+browser never sees the key and never contacts OpenWeatherMap directly.
 
-## Features
+## Requirements
 
-- Search for weather information by city name.
-- Display current weather data including temperature, humidity, wind speed, and general conditions.
-- Utilizes OpenWeatherMap API for real-time weather data.
-- Node.js backend for secure API key handling.
+- [Node.js](https://nodejs.org/) 22 or later, which includes npm.
+- An OpenWeatherMap API key, free from their [sign-up page](https://home.openweathermap.org/users/sign_up).
 
-## Repository Structure
+## Setup
 
-```bash
-weather-app/
-│
-├── src/
-│   ├── docs/           # Documentation files and notes
-│   ├── js/
-│   │   └── script.js
-│   │   └── server.js
-│   │
-│   ├── css/
-│   │   └── style.css
-│   │
-│   └── index.html
-│
-├── .env                # Environment variables (not to be committed)
-├── .gitignore          # Files and directories to be ignored by Git
-├── package.json        # Node.js dependencies and scripts
-└── README.md
-```
-
-### Prerequisites
-
-- [Node.js and npm](https://nodejs.org/) (Node Package Manager) installed on your machine.
-
-### Setup
-
-1. **Clone the repository:**
+1. Install dependencies:
 
    ```sh
-   git clone https://github.com/your-username/weather-app.git
-   cd weather-app
+   npm ci
    ```
 
-2. **Install dependencies:**
+2. Copy the example environment file:
 
    ```sh
-   npm install
+   cp .env.example .env
    ```
 
-3. **Set up environment variables:**
-   - Create a `.env` file in the root directory of the project.
-   - Add your OpenWeatherMap API key:
+   Set `OPENWEATHERMAP_API_KEY` in the new file. `.env` is ignored by git. `.env.example`
+   contains no real values and is safe to commit.
 
-     ```sh
-     OPENWEATHERMAP_API_KEY=your_api_key_here
-     ```
-
-4. **Start the server:**
+3. Start the server:
 
    ```sh
-   node server.js
+   npm start
    ```
 
-## Usage
-
-Once the server is running, open `http://localhost:3000` in your browser to access the Weather App. Simply enter a city name in the search box and press the "Search" button to retrieve and display the current weather data for that city.
-
-## Contributing
-
-Contributions to the Weather App are welcome! Whether it's bug fixes, feature additions, or improvements to the code, feel free to fork the repository and submit a pull request.
+The app runs at `http://localhost:3000`. Set `PORT` to listen on a different port.
 
 ## License
 
-Include your chosen license here. If you haven't chosen a license, you might want to visit [Choose a License](https://choosealicense.com/) to help you make an informed decision.
-
-## Acknowledgments
-
-- [OpenWeatherMap](https://openweathermap.org/) for providing the weather data API.
-- Node.js community for continuous support.
+MIT. See [LICENSE](LICENSE).
