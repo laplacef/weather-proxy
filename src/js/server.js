@@ -6,6 +6,20 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Do not advertise the framework to clients.
+app.disable('x-powered-by');
+
+// The frontend loads only its own same-origin assets and the API returns
+// JSON, so lock every fetch to 'self' and forbid framing outright.
+app.use((req, res, next) => {
+    res.set({
+        'Content-Security-Policy': "default-src 'self'; frame-ancestors 'none'",
+        'X-Content-Type-Options': 'nosniff',
+        'Referrer-Policy': 'no-referrer',
+    });
+    next();
+});
+
 // Resolved from __dirname so the server works regardless of the working
 // directory it was started from.
 app.use(express.static(path.join(__dirname, '..')));
