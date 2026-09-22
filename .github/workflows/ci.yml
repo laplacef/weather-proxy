@@ -23,8 +23,7 @@ jobs:
       # There are no unit tests, so the gate is a boot smoke test: starting the
       # server resolves every runtime dependency and exercises the static
       # middleware. That covers the dependency breakage most likely to land
-      # here — node-fetch 3 is ESM-only and would fail the require, and an
-      # Express major would break express.static.
+      # here, such as an Express major that breaks express.static.
       #
       # The weather route is deliberately not exercised: it needs an API key
       # and a live call to OpenWeatherMap.

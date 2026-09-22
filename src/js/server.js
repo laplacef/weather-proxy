@@ -1,6 +1,5 @@
 const path = require('path');
 const express = require('express');
-const fetch = require('node-fetch');
 require('dotenv').config();
 
 const app = express();
