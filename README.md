@@ -1,5 +1,9 @@
 # Weather Proxy
 
+> [!NOTE]
+> This repository is archived and no longer maintained. Its dependencies are frozen at their
+> last versions and may carry known vulnerabilities. Run `npm audit` before using the code.
+
 Look up the current weather for a city. The browser sends the city name to a small Express
 server, which calls the [OpenWeatherMap](https://openweathermap.org/) API and returns the
 result.
